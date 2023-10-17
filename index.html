@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Universal Visual Decomposer: Long-Horizon Manipulation Made Easy</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+          rel="stylesheet">
+
+    <link rel="stylesheet" href="./static/css/bulma.min.css">
+    <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+    <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+    <link rel="stylesheet" href="./static/css/academicons.min.css">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+    <link rel="stylesheet" href="./static/css/index.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script defer src="./static/js/fontawesome.all.min.js"></script>
+    <script src="./static/js/bulma-carousel.min.js"></script>
+    <script src="./static/js/bulma-slider.min.js"></script>
+    <script src="./static/js/index.js"></script>
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      jax: ["input/TeX", "output/HTML-CSS"],
+      extensions: ["tex2jax.js"],
+      "HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"] },
+      tex2jax: { inlineMath: [ ["$", "$"], ["\\(","\\)"] ], displayMath: [ ["$$","$$"], ["\\[", "\\]"] ], processEscapes: true, ignoreClass: "tex2jax_ignore|dno" },
+      TeX: { noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } } },
+      messageStyle: "none"
+    });
+    </script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js"></script>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('sliderToggleTable').addEventListener('change', function() {
+            let table = document.getElementById('bigTable');
+            if (this.checked) {
+                table.style.display = "table";
+            } else {
+                table.style.display = "none";
+            }
+        });
+    
+        document.getElementById('sliderToggleContent-model').addEventListener('change', function() {
+            let content = document.getElementById('toggle-model');
+            if (this.checked) {
+                content.style.display = "block";
+            } else {
+                content.style.display = "none";
+            }
+        });
+        document.getElementById('sliderToggleContent-training').addEventListener('change', function() {
+          let content = document.getElementById('toggle-training');
+          if (this.checked) {
+              content.style.display = "block";
+          } else {
+              content.style.display = "none";
+          }
+        });
+        document.getElementById('sliderToggleContent-infer').addEventListener('change', function() {
+          let content = document.getElementById('toggle-infer');
+          if (this.checked) {
+              content.style.display = "block";
+          } else {
+              content.style.display = "none";
+          }
+        });
+    });
+    </script>
+    <style>
+      .slider-wrapper {
+        position: relative;
+        width: 100%;
+        height: 25px;
+    }
+        
+    .slider-text {
+      margin-left: 60px;
+      vertical-align: middle;
+  }
+    
+    .slider-checkbox {
+        display: none;
+    }
+    
+    .slider {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 50px;
+        height: 25px;
+        background-color: #ccc;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .slider-checkbox:checked + .slider {
+        background-color: #2196F3;
+    }
+    
+    .slider-checkbox:checked + .slider:before {
+        transform: translateX(25px);
+    }
+    
+    .slider:before {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 21px;
+        height: 21px;
+        background-color: white;
+        border-radius: 50%;
+        transition: transform 0.2s;
+    }
+
+    </style>
+
+    <style>
+        /* Based on the LaTeX lstdefinestyle */
+        pre {
+            background-color: #f4f4f4; /* backcolour */
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #ccc; /* frame=single */
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.85em; /* footnotesize */
+            color: black; /* default color */
+        }
+        .keyword {
+            color: blue;
+        }
+        .otherkeyword {
+            color: violet;
+        }
+        .comment {
+            color: #00a000; /* codegreen */
+        }
+        .string {
+            color: #a020f0; /* codepurple */
+        }
+        /* Add other styles as needed */
+    </style>
+    
+    <style>
+      .algorithm {
+        border-bottom: 2px solid black;
+        padding: 5px;
+        margin: 5px;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 85%;
+        text-align: left;
+      }
+
+      .caption {
+        border-top: 2px solid black;  
+        border-bottom: 2px solid black; 
+          font-weight: bold;
+          text-align: left;
+          margin-bottom: 5px;
+          font-size: 125%;
+      }
+
+      .init {
+          font-style: italic;
+          margin-bottom: 5px;
+      }
+
+      .while-loop {
+          margin-left: 0px;
+      }
+
+      .loop-body {
+          border-left: 2px solid black;
+          padding-left: 15px;
+          margin-left: 10px;
+      }
+    </style>
+
+    <style>
+      .video-container {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+      }
+                      
+      .heading-container {
+        grid-column: span 3;
+        text-align: center;
+        font-size: 125%;
+      }
+  
+      .video-column {
+        flex: 1;
+        text-align: center;
+        padding: 5px;
+      }
+  
+      video {
+        width: auto;
+      }
+    </style>
+
+    <style>
+      .video-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr); /* 2 columns */
+      grid-gap: 20px;
+      max-width: 100%; /* Ensure the grid doesn't exceed the viewport width */
+      margin: 0 auto; /* Center the grid */
+      padding: 20px; /* Add some padding */
+      }
+
+      .sim-video-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-gap: 10px;
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 10px;
+      }
+      
+      .sim-video-grid video {
+        width: 100%;
+        height: auto;
+        border-radius: 15px; 
+        object-fit: cover;
+      }
+
+      .subexperiments-container {
+        grid-column: span 3;
+        text-align: center;
+        font-size: 175%;
+      }
+      
+      .heading-container {
+        grid-column: span 3;
+        text-align: center;
+        font-size: 125%;
+      }
+  
+      .video-item {
+      text-align: center;
+      }
+
+      .video-item video {
+      max-width: 100%; /* Adjust the width of each video as needed */
+      height: auto;
+      text-align: center;
+      }
+
+      .full-width-image {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+  </style>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const videos = document.querySelectorAll('.video-grid-wild .video-item-wild video');
+        videos.forEach(video => {
+            video.playbackRate = 2.0;
+        });
+    });
+    document.addEventListener("DOMContentLoaded", function() {
+      const videos = document.querySelectorAll('.video-motivation video');
+      videos.forEach(video => {
+          video.playbackRate = 0.95;
+      });
+  });
+  </script>
+  <style>
+    .video-grid-wild {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-gap: 5px;
+    }
+
+    .video-motivation {
+      display: flex;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .video-item-wild {
+      text-align: center;
+    }
+
+    .video-item-wild video {
+      max-width: 100%; /* Adjust the width of each video as needed */
+      height: auto;
+    }
+
+    .method {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .video-method {
+      width: 60%;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .code {
+        width: 40%;
+    }
+
+
+  </style>
+
+</head>
+
+<body>
+
+
+<section class="hero">
+    <div class="hero-body">
+        <div class="container is-max-desktop">
+            <div class="columns is-centered">
+                <div class="column has-text-centered">
+                    <h1 class="title is-1 publication-title" style="width: 3000px; text-align: center;">
+                        Universal Visual Decomposer:<br>Long-Horizon Manipulation Made Easy
+                    </h1>
+                    <div class="is-size-4 publication-authors">
+                        <span class="author-block">
+                            <a target="_blank" href="https://zcczhang.github.io/">Zichen&#160;"Charles"&#160;Zhang</a><sup>1&dagger;</sup>,
+                            <a target="_blank" href="https://li-yunshuang.github.io/">Yunshuang&#160;Li†</a><sup>2&dagger;</sup>,
+                            <a target="_blank" href="https://obastani.github.io/">Osbert&#160;Bastani</a><sup>2</sup>,
+                            <a target="_blank" href="https://homes.cs.washington.edu/~abhgupta/">Abhishek&#160;Gupta</a><sup>3</sup>,
+                            <br>
+                            <a target="_blank" href="https://www.seas.upenn.edu/~dineshj/">Dinesh&#160;Jayaraman</a><sup>2</sup>,
+                            <a target="_blank" href="https://www.seas.upenn.edu/~jasonyma/">Yecheng&#160;Jason&#160;Ma</a><sup>2&#8225</sup>,
+                            <a target="_blank" href="https://lucaweihs.github.io">Luca&#160;Weihs</a><sup>1&#8225</sup>
+                        </span>
+                    </div>
+
+                    <div class="is-size-4 publication-authors">
+                        <span class="author-block"><sup>1</sup>PRIOR @ Allen Institute for AI; </span>
+                        <span class="author-block"><sup>2</sup>University of Pennsylvania; </span>
+                        <span class="author-block"><sup>3</sup>University of Washington</span>
+                    </div>
+                    <div class="is-size-5 publication-authors">
+                        <span class="author-block"><sup>&dagger;</sup>Equal Contribution</span>
+                        <span class="author-block"><sup>&#8225;</sup>Equal Advising </span>
+                    </div>
+
+                    <div class="column has-text-centered">
+                        <div class="publication-links">
+                            <span class="link-block">
+                                <a target="_blank" href="https://arxiv.org/abs/2310.08581"
+                                   class="external-link button is-medium is-rounded">
+                                  <span class="icon">
+                                      <i class="ai ai-arxiv"></i>
+                                  </span>
+                                  <span>arXiv</span>
+                                </a>
+                            </span>
+                            <span class="link-block">
+                              &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+                              <a target="_blank" href="assets/pdf/full_paper.pdf"
+                                 class="external-link button is-medium is-rounded">
+                                <span class="icon">
+                                    <i class="fas fa-file-pdf"></i>
+                                </span>
+                                <span>PDF</span>
+                              </a>
+                           </span>
+                            &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="link-block">
+                              <a target="_blank" href="assets/videos/ICRA24_3197_VI_i.mp4"
+                                class="external-link button is-medium is-rounded">
+                                <span class="icon">
+                                    <i class="fas fa-video"></i>
+                                </span>
+                                <span>Video</span>
+                              </a>
+                            </span>                            
+                            &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+                            <span class="link-block">
+                            <a target="_blank" href=""
+                               class="external-link button is-medium is-rounded">
+                              <span class="icon">
+                                  <i class="fab fa-github"></i>
+                              </span>
+                              <span>Code</span>
+                            </a>
+                          </span>
+                          <!-- &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+                          <span class="link-block">
+                          <a target="_blank" href=""
+                             class="external-link button is-medium is-rounded">
+                            <span class="icon">
+                                <i class="fas fa-database"></i>
+                            </span>
+                            <span>Data</span>
+                          </a>
+                        </span> -->
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+  <div class="container is-max-widescreen">
+    <div class="rows">
+        <div class="rows is-centered ">
+            <div class="row is-full-width">                
+                <div class="video-motivation">
+                  <video controls autoplay muted>
+                    <source src="assets/videos/pull.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                    </video>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+      <!-- Abstract. -->
+      <div class="columns is-centered has-text-centered">
+          <div class="column">
+            <br>
+              <h2 class="title is-3" style="margin-top:-5%">Abstract</h2>
+              <div class="content has-text-justified">
+                  <p style="font-size: 125%;">
+                    Real-world robotic tasks stretch over extended horizons and encompass multiple stages. Learning long-horizon manipulation tasks, however, is a long-standing challenge, and demands decomposing the overarching task into several manageable subtasks to facilitate policy learning and generalization to unseen tasks. Prior task decomposition methods require task-specific knowledge, are computationally intensive, and cannot readily be applied to new tasks. To address these shortcomings, we propose Universal Visual Decomposer (UVD), an off-the-shelf task decomposition method for visual long-horizon manipulation using pre-trained visual representations designed for robotic control. At a high level, UVD discovers subgoals by detecting phase shifts in the embedding space of the pre-trained representation. Operating purely on visual demonstrations without auxiliary information, UVD can effectively extract visual subgoals embedded in the videos, while incurring zero additional training cost on top of standard visuomotor policy training. Goal-conditioned policies learned with UVD-discovered subgoals exhibit significantly improved compositional generalization at test time to unseen tasks. Furthermore, UVD-discovered subgoals can be used to construct goal-based reward shaping that jump-starts temporally extended exploration for reinforcement learning. We extensively evaluate UVD on both simulation and real-world tasks, and in all cases, UVD substantially outperforms baselines across imitation and reinforcement learning settings on in-domain and out-of-domain task sequences alike, validating the clear advantage of automated visual task decomposition within the simple, compact UVD framework.
+                  </p>
+              </div>
+          </div>
+      </div>
+  </div>
+  <div class="container is-max-widescreen">
+    <div class="rows">
+        <div class="rows is-centered ">
+          <div class="row is-full-width">
+            <br>
+            <p style="font-size: 125%;">
+              <b>Try our UVD decomposition hosted with Gradio below!</b> Note: due to the limited memory, only VIP preprocessor is supported for now, and uploaded video will be resized to 224x224 first.
+            </p>
+
+            <iframe src="https://9ac50a6d6f43f27d98.gradio.live/" width="100%" height="345" frameborder="0" style="border:0" allowfullscreen></iframe>
+          </div>
+        </div>
+    </div>
+</div>
+</section>
+
+<!--Method-->
+<section class="section">
+    <div class="container is-max-widescreen">
+        <div class="rows">
+            <div class="rows is-centered ">
+                <div class="row is-full-width">
+                    <h2 class="title is-3">
+                      <span class="duvd">Methods</span>
+                    </h2>
+                    <p style="font-size: 125%;">
+                      Our goal is to derive a general-purpose subgoal decomposition method that can operate purely from raw visual inputs on a per-trajectory basis. The key intuition of UVD is that, conditioned on a goal frame, some frames preceding it must visually approach the goal frame; once we discover the first frame in this goal-reaching sequence, the frame that precedes it is then another subgoal. Now by conditioning the new subgoal, we can apply the algorithm recursively until the full sequence is exhausted. Now we show the low-level and high-level psudocode with a visualization of the recursive decomposition process below. 
+                    </p>
+                    <br>
+                <div class="method">
+<div class="pseudo-code">
+  <div class="heading-container">
+    <h1><strong> UVD low-level pseudocode in Python </strong></h1>
+  </div>
+<!-- seems indent senstive -->
+<pre>
+<code><span class="keyword">from</span> scipy.signal <span class="keyword">import</span> argrelextrema
+
+<span class="keyword">def</span> UVD(
+    embeddings: np.ndarray | torch.Tensor, 
+    smooth_fn: Callable,
+    min_interval: <span class="keyword">int</span> = 15,
+) -&gt; <span class="keyword">list</span>[<span class="keyword">int</span>]:
+    <span class="comment"># last frame as the last subgoal</span>
+    cur_goal_idx = -1 
+    <span class="comment"># saving (reversed) subgoal indices (timesteps)</span>
+    goal_indices = [cur_goal_idx]
+    cur_emb = embeddings.copy() <span class="comment"># L, d</span>
+    <span class="keyword">while</span> cur_goal_idx &gt; min_interval:
+        <span class="comment"># smoothed embedding distance curve (L,)</span>
+        d = norm(cur_emb - cur_emb[-1], axis=-1)
+        d = smooth_fn(d)
+        <span class="comment"># monotonicity breaks (e.g. maxima)</span>
+        extremas = argrelextrema(d, np.greater)[0]
+        extremas = [
+            e <span class="keyword">for</span> e <span class="keyword">in</span> extremas 
+            <span class="keyword">if</span> cur_goal_idx - e &gt; min_interval
+        ]
+        <span class="keyword">if</span> extremas:
+            <span class="comment"># update subgoal by Eq.(3)</span>
+            cur_goal_idx = extremas[-1] - 1
+            goal_indices.append(cur_goal_idx)
+            cur_emb = embeddings[:cur_goal_idx + 1]
+        <span class="keyword">else</span>:
+            <span class="keyword">break</span>
+    <span class="keyword">return</span> embeddings[
+        goal_indices[::-1]  <span class="comment"># chronological</span>
+    ]</code></pre>
+</div>    
+
+<div class="video-method">
+
+  <div class="algorithm">
+    <div class="caption">Universal Visual Decomposer (UVD)</div>
+    <div class="init"><b>Init:</b> frozen visual encoder $\phi$, $\tau = \{o_0, \cdots, o_T\}$</div>
+    <div class="init"><b>Init:</b> set of subgoals $\tau_{goal}$ = {}, $t = T$</div>
+    <div class="while-loop">
+    <b>While</b> $t$ not small enough:
+    <div class="loop-body">
+      $\tau_{goal} = \tau_{goal} \cup \{o_{t}\}$ <br>
+      $o_{t-n-1} :=\arg \max_{o_h} d_\phi(o_h;o_t) < d_\phi(o_{h+1};o_t), h < t$ (Eq.3)<br>
+      $ t = t - n - 1$ <br>
+    </div>
+    <b>End</b>
+    </div>
+  </div>
+
+  <br>
+
+  <div class="heading-container">
+    <h1><strong> Visualization of UVD recursive decomposition ​</strong></h1>
+  </div>
+
+  <video controls autoplay loop muted>
+    <source src="videos/Curves/web_apple.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
+                  </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+
+<section class="section">
+  <div class="container is-max-widescreen">
+      <div class="rows">
+          <div class="rows is-centered ">
+              <div class="row is-full-width">
+                  <h2 class="title is-3">
+                      <span class="duvd">UVD in the wild</span>
+                  </h2>
+                  <div class="content has-text-justified">
+                      <p style="font-size: 125%;">
+                          UVD is not limited to robotic settings—it's also highly effective in household scenarios on human videos. Here are some examples of how UVD can decompose subgoals in the wild:          
+                      </p>
+                  </div>
+              </div>
+          </div>
+      </div>    
+      <br>
+      <div class="video-grid-wild">
+        <div class="video-item-wild">
+          <h1>Open a cabinet and rearrange</h1>
+          <video controls>
+            <source src="videos/Curves/web_closet.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      
+        <div class="video-item-wild">
+          <h1>Open a drawer and charge</h1>
+          <video controls>
+            <source src="videos/Curves/web_drawer.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      
+        <div class="video-item-wild">
+          <h1>Unlock a computer</h1>
+          <video controls>
+            <source src="videos/Curves/web_computer.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      
+        <div class="video-item-wild">
+          <h1>Wash hands in bathroom</h1>
+          <video controls>
+            <source src="videos/Curves/web_wash.mp4" type="video/webm">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div> 
+
+      <div class="video-item-wild" style="width: 75%; margin: 0 auto;">
+        <h1>Activities in kitchen</h1>
+        <video controls>
+          <source src="videos/Curves/kitchen-wild-long.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+  </div>
+</section>
+
+
+<!--Experiments-->
+<section class="section">
+    <div class="container is-max-widescreen">
+        <div class="rows">
+            <div class="rows is-centered ">
+                <div class="row is-full-width">
+                    <h2 class="title is-3">
+                        <span class="duvd">Experiments</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="subexperiments-container">
+          <h1><strong>Simulation Results</strong></h1>
+        </div>
+        
+        <div class="rows">
+          <div class="rows is-centered ">
+              <div class="row is-full-width">
+                <div class="content has-text-justified">
+                  <p style="font-size: 125%;">
+                      <strong>In-domain and out-of-domain IL Results on FrankaKitchen.</strong> We report the mean and standard deviation of success rate (full-stage completion) and the percentage of the completion (out of 4 stages), evaluated over diverse existing pretrained visual representations trained by GCBC with three seeds. Highlighted scores represent improvements in out-of-domain evaluations and in-domain results with gains exceeding 0.01.
+                      <!-- For more quantitative experiments results, please refer to Table 3 in our paper. -->
+                  </p>
+                </div>
+
+                <br><br>
+                
+                <div class="toggle-container">
+                  <div class="slider-wrapper">
+                    <input type="checkbox" class="slider-checkbox" id="sliderToggleTable">
+                    <label class="slider" for="sliderToggleTable"></label>
+                    <span class="slider-text"><b>Hide/Show Numerical Results</b></span>
+                </div>
+                  <br>
+                  <table id="bigTable" style="text-align:center; margin:auto; display: none;">
+                    <thead>
+                        <tr>
+                            <th style="text-align: right; border-bottom: 2px solid black; ">Representation</th>
+                            <th style="text-align: right; border-bottom: 2px solid black;">Method</th>
+                            <th style="border-bottom: 2px solid black;"><span class="small-caps">InD</span> success</th>
+                            <th style="border-bottom: 2px solid black;"><span class="small-caps">InD</span> completion</th>
+                            <th style="border-bottom: 2px solid black;"><span class="small-caps">OoD</span> success</th>
+                            <th style="border-bottom: 2px solid black;"><span class="small-caps">OoD</span> completion</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                          <td rowspan="2" class="centered-content" style="text-align: right;border-bottom: 1px solid rgba(0, 0, 0, 0.274);"><a href="https://sites.google.com/view/vip-rl">VIP</a> (ResNet 50)</td>
+                          <td style="text-align: right;">GCBC</td>
+                          <td>0.736 (0.011)</td>
+                          <td>0.898 (0.006)</td>
+                          <td>0.035 (0.014)</td>
+                          <td>0.236 (0.057)</td>
+                      </tr>
+                      <tr>
+                            <td style="text-align: right; border-bottom: 1px solid rgba(0, 0, 0, 0.274);">GCBC + Ours</td>
+                          <td style="border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.737 (0.012)</td>
+                          <td style="border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.903 (0.009)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.188 (0.024)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.566 (0.020)</td>
+                      </tr>
+                      <tr>
+                        <td rowspan="2" class="centered-content" style="text-align: right; border-bottom: 1px solid rgba(0, 0, 0, 0.274);"><a href="">R3M</a> (ResNet 50)</td>
+                        <td style="text-align: right;">GCBC</td>
+                          <td>0.742 (0.026)</td>
+                          <td>0.856 (0.006)</td>
+                          <td>0.014 (0.007)</td>
+                          <td>0.223 (0.029)</td>
+                      </tr>
+                      <tr>
+                            <td style="text-align: right; border-bottom: 1px solid rgba(0, 0, 0, 0.274);">GCBC + Ours</td>
+                          <td style="border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.738 (0.024)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.879 (0.000)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.084 (0.045)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.427 (0.002)</td>
+                      </tr>
+                      <tr>
+                        <td rowspan="2" class="centered-content" style="text-align: right; border-bottom: 1px solid rgba(0, 0, 0, 0.274);"><a href="">LIV</a> (ResNet 50)</td>
+                          <td style="text-align: right;">GCBC</td>
+                          <td>0.608 (0.068)</td>
+                          <td>0.816 (0.046)</td>
+                          <td>0.008 (0.008)</td>
+                          <td>0.116 (0.082)</td>
+                      </tr>
+                      <tr>
+                            <td style="text-align: right; border-bottom: 1px solid rgba(0, 0, 0, 0.274);">GCBC + Ours</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.649 (0.013)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.868 (0.007)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.066 (0.025)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.496 (0.033)</td>
+                      </tr>
+                      <tr>
+                        <td rowspan="2" class="centered-content" style="text-align: right; border-bottom: 1px solid rgba(0, 0, 0, 0.274);"><a href="">CLIP</a> (ResNet 50)</td>
+                          <td style="text-align: right;">GCBC</td>
+                          <td>0.391 (0.017)</td>
+                          <td>0.692 (0.008)</td>
+                          <td>0.005 (0.001)</td>
+                          <td>0.119 (0.017)</td>
+                      </tr>
+                      <tr>
+                            <td style="text-align: right; border-bottom: 1px solid rgba(0, 0, 0, 0.274);">GCBC + Ours</td>
+                          <td style="border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.394 (0.036)</td>
+                          <td style="border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.701 (0.012)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.073 (0.003)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 1px solid rgba(0, 0, 0, 0.274);">0.403 (0.01)</td>
+                      </tr>
+                      <tr>
+                          <td rowspan="2" class="centered-content" style="text-align: right; border-bottom: 2px solid rgba(0, 0, 0, 0.274);"><a href="">DINO-v2</a> (ViT-Large)</td>
+                          <td style="text-align: right;">GCBC</td>
+                          <td>0.329 (0.025)</td>
+                          <td>0.654 (0.019)</td>
+                          <td>0.012 (0.01)</td>
+                          <td>0.261 (0.213)</td>
+                      </tr>
+                      <tr>
+                          <td style="text-align: right; border-bottom: 2px solid rgba(0, 0, 0, 0.274);">GCBC + Ours</td>
+                          <td style="border-bottom: 2px solid rgba(0, 0, 0, 0.274);">0.322 (0.053)</td>
+                          <td style="border-bottom: 2px solid rgba(0, 0, 0, 0.274);">0.669 (0.037)</td>
+                          <td style="border-bottom: 2px solid rgba(0, 0, 0, 0.274); font-weight: bold; color: rgb(10, 141, 10);">0.055 (0.025)</td>
+                          <td style="border-bottom: 2px solid rgba(0, 0, 0, 0.274); font-weight: bold; color: rgb(10, 141, 10);">0.446 (0.034)</td>
+                      </tr>
+                      <tr>
+                        <td rowspan="2" class="centered-content" style="text-align: right;border-bottom: 2px solid rgba(0, 0, 0, 0.274);"><a href="https://sites.google.com/view/vip-rl">VIP</a> (ResNet 50)</td>
+                        <td style="text-align: right;">GCBC-GPT</td>
+                          <td>0.702 (0.029)</td>
+                          <td>0.841 (0.02)</td>
+                          <td>0.039 (0.027)</td>
+                          <td>0.302 (0.028)</td>
+                      </tr>
+                      <tr>
+                        <td style="text-align: right; border-bottom: 2px solid rgba(0, 0, 0, 0.274);">GCBC-GPT + Ours</td>
+                          <td style="border-bottom: 2px solid rgba(0, 0, 0, 0.274);">0.708 (0.056)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 2px solid rgba(0, 0, 0, 0.274);">0.897 (0.024)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 2px solid rgba(0, 0, 0, 0.274);">0.213 (0.054)</td>
+                          <td style="font-weight: bold; color: rgb(10, 141, 10); border-bottom: 2px solid rgba(0, 0, 0, 0.274);">0.600 (0.038)</td>
+                      </tr>
+                    </tbody>                  
+                  </table>
+                
+                </div>
+              </div>
+          </div>
+        </div>
+        <br>
+        <div class="rows">
+          <div class="rows is-centered ">
+              <div class="row is-full-width">
+                <div class="content has-text-justified">
+                  <p style="font-size: 125%;">
+                    Next, we visualize the qualititive results for one of the task in FrankaKitchen: open the microwave, turn on the bottom burner, toggle the light switch, and slide the cabinet. We compare the decomposition results with different frozen visual backbones, as well as 3D t-SNE visualizations (colors are labeled by each subgoal). Representations pretrained with temporal objectives like VIP and R3M provide more smooth, continuous, and monotone clusters in feature space than others, whereas the ResNet trained for supervised classification on ImageNet-1k provide the most sparse embeddings.   
+                  </p>
+                </div>
+              </div>
+          </div>
+      </div>
+
+        <div class="video-column">
+          <img src="assets/figs/sim_subgoals_vis.jpg" alt="Your Image" class="full-width-image">
+          <p> <b> UVD Decomposition Results in Simulation </b> </p>
+        </div>
+
+        <div class="sim-video-grid">
+          <div class="video-column">
+            <video controls>
+              <source src="videos/simulation/sim_GCBC.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p> <b>GCBC</b> ❌ </p>
+          </div>
+
+          <div class="video-column">
+            <video controls>
+              <source src="videos/simulation/sim_UVD_GCBC.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p> <b>GCBC + UVD</b> <span class="green-hollow-circle"></span> </p>
+          </div>
+        </div>
+
+        <!-- <div class="content has-text-justified">
+          <p style="font-size: 125%;">
+              <strong>GCRL</strong>
+          </p>
+        </div> -->
+
+        <div class="sim-video-grid">
+          <div class="video-column">
+            <video controls>
+              <source src="videos/simulation/sim_GCRL.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p> <b>GCRL</b> ❌ </p>
+          </div>
+
+          <div class="video-column">
+            <video controls>
+              <source src="videos/simulation/sim_UVD_GCRL.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video> <b>GCRL + UVD</b> <span class="green-hollow-circle"></span> </p>
+          </div>
+        </div>
+
+
+        <div class="subexperiments-container">
+          <h1><strong>Real Robot Results</strong></h1>
+        </div>
+
+        <div class="content has-text-justified">
+            <p style="font-size: 125%;">
+                <strong>In-domain evaluation</strong>. For real-world applications, we've tested UVD on three multistage tasks: placing an apple in an oven and close the oven ($\texttt{Apple-in-Oven}$), pouring fries then place on a rack ($\texttt{Fries-and-Rack}$), and folding a cloth ($\texttt{Fold-Cloth}$). The corresponding videos show how we break down these tasks into semantically meaningful sub-goals. Two successful and one failed rollouts on these three tasks. All videos for real robot experiments are 2x speed up.
+                <!-- For more quantitative experiments results, please refer to Table 3 in our paper. -->
+            </p>
+        </div>
+        
+        <br>
+
+        <div class="heading-container">
+          <h1><strong>$\texttt{Apple-in-Oven}$</strong></h1>
+        </div>
+        
+        <div class="video-container">
+          <div class="video-column">
+            <video controls autoplay loop>
+              <source src="videos/Curves/web_apple.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p> UVD Decomposition Results </p>
+          </div>
+      
+          <div class="video-column">
+            <video controls>
+              <source src="videos/apple/web_UVD_full_success_2.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p><span class="green-hollow-circle"></span></p>
+          </div>
+      
+          <div class="video-column">
+            <video controls>
+              <source src="videos/apple/web_UVD_full_success_3.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p><span class="green-hollow-circle"></span></p>
+          </div>
+      
+          <div class="video-column">
+            <video controls>
+              <source src="videos/apple/web_UVD_full_failure_2.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p>❌</p>
+          </div>
+        </div>
+
+        <br>
+
+        <div class="heading-container">
+          <h1><strong>$\texttt{Fries-and-Rack}$</strong></h1>
+        </div>
+        
+        <div class="video-container">
+          <div class="video-column">
+            <video controls autoplay loop>
+              <source src="videos/Curves/web_fries.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p> UVD Decomposition Results </p>
+          </div>
+
+          <div class="video-column">
+            <video controls>
+              <source src="videos/Fries/web_UVD_full_success_1.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p><span class="green-hollow-circle"></span></p>
+          </div>
+      
+          <div class="video-column">
+            <video controls>
+              <source src="videos/Fries/web_UVD_full_success_2.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p><span class="green-hollow-circle"></span></p>
+          </div>
+      
+          <div class="video-column">
+            <video controls>
+              <source src="videos/Fries/web_UVD_full_failure_2.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p>❌</p>
+          </div>
+        </div>
+
+        <br>
+        <div class="heading-container">
+          <h1><strong>$\texttt{Fold-Cloth}$</strong></h1>
+        </div>
+        <!-- <h1 style="text-align: center;"><strong>Fold-Cloth</strong></h1> -->
+        
+        <div class="video-container">
+          <div class="video-column">
+            <video controls autoplay loop>
+              <source src="videos/Curves/web_cloth.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p> UVD Decomposition Results </p>
+          </div>
+
+          <div class="video-column">
+            <video controls>
+              <source src="videos/Cloth/web_UVD_full_success_1.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p><span class="green-hollow-circle"></span></p>
+          </div>
+      
+          <div class="video-column">
+            <video controls>
+              <source src="videos/Cloth/web_UVD_full_success_2.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p><span class="green-hollow-circle"></span></p>
+          </div>
+      
+          <div class="video-column">
+            <video controls>
+              <source src="videos/Cloth/web_UVD_full_failure_4.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p>❌</p>
+          </div>
+      
+        </div>
+
+        <div class="content has-text-justified">
+            <p style="font-size: 125%;">
+                <strong>Compositional Generalization</strong>. We evaluate UVD's ability to generalize compositionally by introducing unseen initial states for these tasks. While methods like GCBC fail (first row) under these circumstances, GCBC + UVD (second row) successfully adapts.
+            </p>
+        </div>
+          
+        <div class="video-grid">
+          <div class="heading-container">
+            <h1><strong>GCBC</strong> ❌ </h1>
+          </div>
+          <div class="video-item">
+            <video controls>
+              <source src="videos/apple/web_BC_gen_1.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+
+          <div class="video-item">
+            <video controls>
+              <source src="videos/Fries/web_BC_gen_1.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          
+          <div class="video-item">
+            <video controls>
+              <source src="videos/Cloth/web_BC_gen_1.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+
+          <!-- <p style="font-size: 200%;">
+            <h1><strong>GCBC + UVD (Success)</strong></h1>
+          </p> -->
+          <div class="heading-container">
+            <h1><strong>GCBC + UVD</strong> <span class="green-hollow-circle"></span> </h1>
+          </div>
+
+          <div class="video-item">
+            <video controls>
+              <source src="videos/apple/web_UVD_gen_success.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        
+          <div class="video-item">
+            <video controls>
+              <source src="videos/Fries/web_UVD_gen_success.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+
+          <div class="video-item">
+            <video controls>
+              <source src="videos/Cloth/web_UVD_gen_success.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        
+        </div>
+      </div>
+
+    </div>
+</section>
+
+
+<!-- Video Gallery -->
+<section class="section">
+  <div class="container is-max-widescreen">
+      <div class="rows">
+          <div class="rows is-centered ">
+            <div class="content has-text-justified">
+              <p style="font-size: 125%;">
+                  <strong>Robustness with Human Involvement</strong>. We further demonstrate how UVD is able to recover or continue to complete the task with human interference. In $\texttt{Apple-in-Oven}$ and $\texttt{Fries-and-Rack}$ task, we either reset the scene by putting the apple to initial position or skip the intermediate step with human interference. Our method shows great robustness in these cases.
+              </p>
+            </div>
+
+            <div class="video-grid">
+              <div class="video-item">
+                <h1> Reset the apple to initial position </h1>
+                <video controls>
+                  <source src="videos/head_videos/apple_human.mp4" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+    
+              <div class="video-item">
+                <h1> Accomplish intermediate step "pushing" </h1>
+                <video controls>
+                  <source src="videos/head_videos/apple_skip.mp4" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+              
+              <div class="video-item">
+                <h1> Accomplish intermediate step "pouring"</h1>
+                <video controls>
+                  <source src="videos/head_videos/fries_human.mp4" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
+
+              </div>
+          </div>
+      </div>    
+</section>
+
+<section class="section">
+  <div class="container is-max-widescreen">
+      <div class="rows">
+          <div class="rows is-centered ">
+              <div class="row is-full-width">
+                <h2 class="title is-3">
+                  <span class="duvd">Implementation Details</span>
+                </h2>
+                  
+                <div class="toggle-container">
+                  <div class="slider-wrapper">
+                    <input type="checkbox" class="slider-checkbox" id="sliderToggleContent-model">
+                    <label class="slider" for="sliderToggleContent-model"></label>
+                    <span class="slider-text"><b>Policies</b></span>
+                  </div>
+                  <br>
+                  <div id="toggle-model" style="display: none;">
+                    <div class="content has-text-justified">
+                      <p style="font-size: 125%;">
+                          <strong>Model:</strong> To underscore that our method serves as an off-the-shelf method that is applicable to different policies, we ablate with a Multilayer Perceptron (MLP) based single-step policy and a GPT-like causal transformer policy. 
+                        
+                          This MLP ingests a combination of the frozen visual embeddings from step-wise RGB observations and goal images followed by a 1D BatchNorm, as well as the 9D proprioceptive data encoded through a single layer complemented by a LayerNorm. 
+                          <br>
+                          Our GPT policy removes the BatchNorm and replaces the MLP with the causal self-attention blocks consisting of 8 layers, 8 heads, and an embedding dimension of 768. We set an attention dropout rate of 0.1 and a context length of 10. 
+                          We transition from the conventional LayerNorm to the Root Mean Square Layer Normalization (RMSNorm) and enhance the transformer with rotary position embedding (RoPE). Actions are predicted via a linear. At inference time, we cache the keys and values of the self-attention at every step, ensuring that there's no bottleneck as the context length scales up. Nevertheless, in the FrankaKitchen tasks, we observed that a longer context length tends to overfit and performance drop. Therefore, we consistently use a context length of 10 for all experiments. More details can be found in appendix.
+                      </p>
+
+                      <div style="display: flex; justify-content: space-between; width: 100%; text-align: center;">
+
+                        <div style="width: 35%;">
+                            <table border="1" cellspacing="0" cellpadding="5" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Hyperparameter/Value</th>
+                                        <th>MLP-Policy</th>
+                                        <th>GPT-Policy</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Optimizer</td><td>AdamW</td><td>AdamW</td></tr>
+                                    <tr><td>Learning Rate</td><td>3e-4</td><td>3e-4</td></tr>
+                                    <tr><td>LR Schedule</td><td>cos decay</td><td>cos decay</td></tr>
+                                    <tr><td>Warmup Steps</td><td>0</td><td>1000</td></tr>
+                                    <tr><td>Decay Steps</td><td>150k</td><td>200k</td></tr>
+                                    <tr><td>Weight Decay</td><td>0.01</td><td>0.1</td></tr>
+                                    <tr><td>Betas</td><td>[0.9, 0.999]</td><td>[0.9, 0.99]</td></tr>
+                                    <tr><td>Max Gradient Norm</td><td>1.0</td><td>1.0</td></tr>
+                                    <tr><td>Batch Size</td><td>512</td><td>128</td></tr>
+                                </tbody>
+                            </table>
+                            <p><strong>IL training hyperparameters</strong></p>
+                        </div>
+                    
+                        <div style="width: 30%;">
+                            <table border="1" cellspacing="0" cellpadding="5" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Hyperparameter</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Hidden Dim.</td><td>[1024, 512, 256]</td></tr>
+                                    <tr><td>Activation</td><td>ReLU</td></tr>
+                                    <tr><td>Proprio. Hidden dim.</td><td>512</td></tr>
+                                    <tr><td>Proprio. Activation</td><td>Tanh</td></tr>
+                                    <tr><td>Visual Norm.</td><td>Batchnorm1d</td></tr>
+                                    <tr><td>Proprio. Norm.</td><td>LayerNorm</td></tr>
+                                    <tr><td>Action Activation</td><td>Tanh</td></tr>
+                                    <tr><td>Trainable Parameters</td><td>3.3M</td></tr>
+                                </tbody>
+                            </table>
+                            <p><strong>MLP policy hyperparameters</strong></p>
+                        </div>
+
+                        <div style="width: 30%;">
+                            <table border="1" cellspacing="0" cellpadding="5" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Hyperparameter</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Context Length</td><td>10</td></tr>
+                                    <tr><td>Embedding Dim.</td><td>768</td></tr>
+                                    <tr><td>Layers</td><td>8</td></tr>
+                                    <tr><td>Heads</td><td>8</td></tr>
+                                    <tr><td>Embedding Dropout</td><td>0.0</td></tr>
+                                    <tr><td>Attention Dropout</td><td>0.1</td></tr>
+                                    <tr><td>Normalization</td><td>RMSNorm</td></tr>
+                                    <tr><td>Action Activation</td><td>Tanh</td></tr>
+                                    <tr><td>Trainable Parameters</td><td>58.6M</td></tr>
+                                </tbody>
+                            </table>
+                            <p><strong>GPT policy hyperparameters</strong></p>
+                        </div>
+                    
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+                
+                <br>
+                <div class="toggle-container">
+                  <div class="slider-wrapper">
+                    <input type="checkbox" class="slider-checkbox" id="sliderToggleContent-training">
+                    <label class="slider" for="sliderToggleContent-training"></label>
+                    <span class="slider-text"><b>Training</b></span>
+                  </div>
+                  <br>
+                  <div id="toggle-training" style="display: none;">
+                    <div class="content has-text-justified">
+                      <p style="font-size: 125%;">
+                          <strong>Reinforcement Learning:</strong> 
+                          <!-- We pre-process all the demos using UVD so that within each demo we have $g_i (i=1,2,..n)$ subgoals with corresponding frame index $I_i$. For all frames between index $I_{i-1}$ and $I_{i}$, we concatenate current observation embeddings (from side-view camera and wrist camera) with the embedding of $g_i$ as input and predict the output. We're using velocity control so the output is joint velocity and gripper action (open or close). Robot control frequency is 15 Hz. -->
+                          All RL experiments are trained using the Proximal Policy Optimization (PPO) RL algorithm implemented within the <a href="https://allenact.org/">AllenAct</a> RL training framework.
+
+                          In our RL setting, the configurations for both training and inference remain consistent. This is analogous to the inference for IL as detailed in Appendix. A2. Specifically, the task is also specified by an unlabeled video trajectory $\tau$. Given the initial observation $o_0$ and UVD subgoal $g_0\in\tau_{goal}$, the agent continuously predicts and executes actions conditioned on subgoal $g_0$ using the online policy with frozen visual encoder $\phi$, until the condition $d_\phi(o_t;g_0) < \epsilon$ satisfied for some timestep $t$ and positive threshold $\epsilon$. 
+
+                          As shown in Eq. 4, we provide progressive rewards defined as goal-embedding distance <i>difference</i> using UVD subgoals. Recognizing that the distance between consecutive subgoals can vary, we employ the normalized distance function: $\bar{d_\phi}(o_t;g_i) := d_\phi(o_t;g_i) / d_\phi(g_{i-1}; g_i)$. This ensures that $\bar{d_\phi}(o_{t-h};g_i) \approx 1$ for some timestep $t-h$ that the subgoal was transitioned from $g_{i-1}$ to $g_i$. Additionally, we provide modest discrete rewards for encouraging (chronically) subgoal transitions, and larger terminal rewards for the full completion of task sub-stages, which is equivalent as the embedding distance between the observation and the final subgoal becomes sufficiently small. To sum up, at timestep $t$, the agent is receiving a weighted reward
+                          \begin{equation}\label{eq:literal_rl_rewards}
+                          \begin{aligned}
+                              R_t &= \alpha\cdot\left(\bar{d_\phi} (o_{t-1};g_i) - d_\phi(o_t;g_i) \right) \\
+                              &+ \beta \cdot \mathbf{1}_{\bar{d_\phi}(o_t;g_i) < \epsilon} \\
+                              &+ \gamma \cdot \mathbf{1}_{\bar{d_\phi}(o_t;g_m) < \epsilon} 
+                          \end{aligned}
+                          \end{equation}
+                          based on the RGB observations $o_t, o_{t-1}$, corresponding UVD subgoal $g_i\in\tau_{goal}$, and final subgoal $g_m\in\tau_{goal}$. While similar reward formulations appear in works, we are the first in delivering optimally monotonic implicit rewards unsupervisedly by UVD, derived directly from RGB features. In our experiments, we use $\alpha=5, \beta=3, \gamma=6, \epsilon=0.2$, and confine the first term within the range $[-\alpha, \alpha]$ in case edge cases in feature space. For the final-goal-conditioned RL baseline, it is equivalent as $g_i = g_m = o_{T}\in \tau = \{o_0, \cdots, o_T\}$ and $\beta=0$ in Equation above.
+
+                          Tab. II illustrates that the simple incorporation of UVD-rewards greatly enhances performance. We also showcase a comparison of evaluation rewards between GCRL and GCRL augmented with our UVD rewards. This is done using the R3M and VIP backbones, as seen in Fig. 2. This highlights the capability of our UVD to offer more streamlined progressive rewards. This capability is pivotal for the agent to adeptly manage the challenging, multi-stage tasks presented in FrankaKitchen. To the best of our knowledge, ours is the first work to achieve such a high success rate in the FrankaKitchen task without human reward engineering and additional training. Notably, our RL agent, trained with the optimally monotonic UVD-reward, can complete 4 sequential tasks in as few as <b>90</b> --- a stark contrast to the over 200 steps observed in human-teleoperated demonstrations. This further illustrates the UVD-reward's potential to encourage agents to accomplish multi-stage goals more efficiently. The videos of rollouts can be found on our website.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <br>
+
+                <div class="toggle-container">
+                  <div class="slider-wrapper">
+                    <input type="checkbox" class="slider-checkbox" id="sliderToggleContent-infer">
+                    <label class="slider" for="sliderToggleContent-infer"></label>
+                    <span class="slider-text"><b>Inference</b></span>
+                  </div>
+                  <br>
+                  <div id="toggle-infer" style="display: none;">
+                    <div class="content has-text-justified">
+                      <p style="font-size: 125%;">
+                          <strong>Inference:</strong> 
+                          We now elucidate the specifics of applying UVD subgoals in a multi-task setting during inference. Remember that given a video demonstration represented as $\tau = (o_0, \cdots, o_T)$ and UVD-identified subgoals $\tau_{goal} = (g_0, \cdots, g_m)$, we can extract an augmented trajectory labeled with goals, represented as $\tau_{aug} = {(o_a, a_0, g_0), \cdots, {o_T, a_T, g_m}}$. This is useful for goal-conditioned policy training, as discussed in Sec. IV-B.
+
+                          For inference, we can similarly produce an augmented offline trajectory without the necessity of ground-truth actions, i.e., $\tau_{aug,infer} = \{(o_0, g_0), \cdots, (o_T, g_m)\}$. In the online rollout, after resetting the environment to $o_0$, the agent continuously predicts and enacts actions conditioned on subgoal $g_0$ using the trained policy. This continues until the embedding distance between the current observation and the subgoal surpasses a pre-set positive threshold $\epsilon$ at a specific timestep $i$, i.e. $d_\phi(o_i; g_0) < \epsilon$, where $\phi$ is the same frozen visual backbone used in decomposition and training. Following this, the subgoal will be seamlessly transitioned to the next, continuing until success or failure is achieved. 
+
+                          In practice, the straightforward goal-relaying inference method might face accumulative errors during multiple subgoal transitions, especially due to noise from online rollouts. However, when an agent is guided explicitly by tasks depicted in a video, incorporating the duration dedicated to each subgoal can help reduce this vulnerability. To clarify, once we've aligned subgoals with observations from the video, we also draw a connection between the timesteps of observations and their corresponding subgoals. We denote the <i>subgoal budget</i> for subgoal $g_i = o_t$ as $\mathcal{B}_{g_i} := n + 1$ where $g_{i-1} = o_{t-n-1}$ based on Eq. 3. 
+                          Building on this, we propose a secondary criterion for switching subgoals: verify if the relative steps completing the current stage are in the neighborhood of the subgoal budget. This measure ensures timely transitions: it avoids prematurely switching before completing a sub-stage or delaying the transition despite accomplishing the sub-stage in the environment. To sum up, given an ongoing observation $o_t$ and subgoal $g_i$ at timestep $t$, and considering the preceding subgoal $g_{i-1}$ at timesteps $t - h$, the subgoal will transition to $g_{i+1}$ if
+                          \begin{equation}
+                          d_\phi(o_t; g_i) < \epsilon \quad \text{and} \quad |h - \mathcal{B}_{g_i}| < \delta    
+                          \end{equation}
+                          We use $\epsilon=0.2$ and $\delta=2$ steps for all of our experiments, except in baseline tests that are conditioned solely on final goals.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+          </div>
+        </div>
+    </div>    
+</section>
+
+<p style="display:none">
+  <script type="text/javascript" id="clustrmaps" src="//clustrmaps.com/map_v2.js?d=jigVDj09uNnCG7pA6Dg_ATfL4XqsVJHhQe8TT8iMtwg&cl=ffffff&w=a"></script>
+</p>
+
+
+<!--Citation-->
+<section class="section" id="BibTeX">
+    <div class="container is-max-widescreen content">
+        <h2 class="title">BibTeX</h2>
+        <pre><code>@misc{zhang2023universal,
+  title  = {Universal Visual Decomposer: Long-Horizon Manipulation Made Easy}, 
+  author = {Zichen Zhang and Yunshuang Li and Osbert Bastani and Abhishek Gupta and Dinesh Jayaraman and Yecheng Jason Ma and Luca Weihs},
+  title  = {Universal Visual Decomposer: Long-Horizon Manipulation Made Easy},
+  year   = {2023},
+  eprint = {arXiv:2310.08581},
+}</code></pre>
+    </div>
+</section>
+
+<footer class="footer">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column">
+                <div class="content has-text-centered">
+                    <p>
+                        Website template borrowed from <a
+                            href="https://github.com/nerfies/nerfies.github.io">NeRFies</a> and <a
+                            href="https://github.com/cliport/cliport.github.io">CLIPort</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
