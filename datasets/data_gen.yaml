@@ -1,0 +1,29 @@
+raw_data_path: datasets/franka_kitchen_raw_dataset/full
+
+output_path: datasets/franka_kitchen_demos
+max_demos: null # null for all
+frame_height: 224
+frame_width: 224
+terminal_if_done: false
+max_reject_sampling: 1
+include_no_robot: false
+render: false
+save_mp4: true
+mp4_fps: null
+copy_raw_data: false
+
+debug: false
+
+seed_start: 42
+dm_backend: false
+mp: true
+num_processes: null
+gpus: null
+
+
+hydra:
+  job:
+    chdir: true
+  run:
+    dir: .
+  output_subdir: null
