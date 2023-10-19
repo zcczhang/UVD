@@ -12,6 +12,10 @@ ______________________________________________________________________
 
 
 
+https://github.com/zcczhang/UVD/assets/52727818/5555b99a-76eb-4d76-966f-787af763573a
+
+
+
 
 </div>
 
@@ -101,7 +105,7 @@ import uvd
 
 # (N sub-goals, *video frame shape)
 subgoals = uvd.get_uvd_subgoals(
-    "xxx.mp4",   # video filename or (L, *video frame shape) video numpy array
+    "/PATH/TO/VIDEO.*",   # video filename or (L, *video frame shape) video numpy array
     preprocessor_name="vip",    # Literal["vip", "r3m", "liv", "clip", "vc1", "dinov2"]
     device="cuda" if torch.cuda.is_available() else "cpu",  # device for loading frozen preprocessor
     return_indices=False,   # True if only want the list of subgoal timesteps
