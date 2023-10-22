@@ -2,8 +2,8 @@
 
 <div align="center">
 
-[[Website]](https://cec-agent.github.io/)
-[[arXiv]](https://zcczhang.github.io/UVD/)
+[[Website]](https://zcczhang.github.io/UVD/)
+[[arXiv]](https://arxiv.org/abs/2310.08581)
 [[PDF]](https://zcczhang.github.io/UVD/assets/pdf/full_paper.pdf)
 [[Installation]](#Installation)
 [[Usage]](#Usage)
