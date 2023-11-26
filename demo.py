@@ -1,10 +1,17 @@
 import gradio as gr
-
+import torch
 import uvd
+import decord
 
 
 def proc_video(video, preprocessor_name):
-    subgoals = uvd.get_uvd_subgoals(video, preprocessor_name.lower().replace("-", ""))
+    frame_original_res = decord.VideoReader(video)[:].asnumpy()
+    indices = uvd.get_uvd_subgoals(
+        video, preprocessor_name.lower().replace("-", ""),
+        device="cuda" if torch.cuda.is_available() else "cpu",
+        return_indices=True,
+    )
+    subgoals = frame_original_res[indices]
     return gr.Gallery(
         value=[(img, f"No. {i+1} subgoal") for i, img in enumerate(subgoals)]
     )

@@ -15,6 +15,6 @@ scikit-learn
 shimmy==0.2.0
 wandb==0.14.0
 termcolor
-decord
-gradio
+decord==0.6.0
+gradio==3.48.0
 allenact@git+https://github.com/allenai/allenact.git@usd#egg=allenact&subdirectory=allenact
