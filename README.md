@@ -146,10 +146,12 @@ and passing `--policy` for using MLP or causal GPT policy; `--preprocessor_name`
 If you find this project useful in your research, please consider citing:
 
 ```bibtex
-@article{zhang2023universal,
-  title={Universal Visual Decomposer: Long-Horizon Manipulation Made Easy},
+@inproceedings{zhang2024universal,
+  title={Universal visual decomposer: Long-horizon manipulation made easy},
   author={Zhang, Zichen and Li, Yunshuang and Bastani, Osbert and Gupta, Abhishek and Jayaraman, Dinesh and Ma, Yecheng Jason and Weihs, Luca},
-  journal={arXiv preprint arXiv:2310.08581},
-  year={2023}
+  booktitle={2024 IEEE International Conference on Robotics and Automation (ICRA)},
+  pages={6973--6980},
+  year={2024},
+  organization={IEEE}
 }
 ```
