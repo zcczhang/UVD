@@ -39,7 +39,7 @@ setup(
         ]
     },
     install_requires=_read_install_requires(),
-    python_requires="==3.9.*",
+    python_requires=">=3.9.*",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
